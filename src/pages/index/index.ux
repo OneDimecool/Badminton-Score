@@ -1,0 +1,89 @@
+<template>
+  <div class="page" @swipe="handleSwipe">
+    <div class="block1">
+      <text class="score">{{ score_opp }}</text>
+    </div>
+    <div class="block2">
+      <text class="score">{{ score_self }}</text>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+
+export default {
+  // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+  private: {
+    score_opp: 0,
+    score_self: 0
+  },
+
+  handleSwipe(direction){
+    if(direction === 'up'){
+      this.score_self += 1;
+    } else if(direction === 'down'){
+      this.score_opp += 1;
+    }
+  },
+
+  routeDetail() {
+    // 跳转到应用内的某个页面，router用法详见：文档->接口->页面路由
+    router.push({
+      uri: "/pages/detail"
+    })
+  }
+}
+</script>
+
+<style>
+.demo-page {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.page{
+  display: flex;
+  flex-direction: column;
+  width:192px;
+  height:490px;
+  background-color:#000000;
+  justify-content:space-between;
+  align-items: center;
+}
+
+.block1,.block2 {
+  width: 192px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.block1{
+  background-color: #3ac7ff;
+}
+.block2 {
+  background-color: #ff3a33;
+}
+.score{
+  font-size: 100px;
+  color: #ffffff;
+}
+
+.title {
+  font-size: 20px;
+  text-align: center;
+}
+
+.btn {
+  width: 200px;
+  height: 40px;
+  margin-top: 20px;
+  border-radius: 5px;
+  background-color: #09ba07;
+  font-size: 20px;
+  color: #ffffff;
+}
+</style>
