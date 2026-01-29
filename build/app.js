@@ -11,7 +11,7 @@ export default function(global, globalThis, window, $app_exports$, $app_evaluate
                 var __webpack_modules__ = {
                     "./src/manifest.json" (module) {
                         "use strict";
-                        module.exports = JSON.parse('{"package":"com.application.watch.demo","name":"MyFirstApp","versionName":"1.0.0","versionCode":1,"minPlatformVersion":1000,"icon":"/common/logo.png","deviceTypeList":["watch"],"features":[{"name":"system.router"}],"config":{"logLevel":"log","designWidth":"device-width"},"router":{"entry":"pages/index","pages":{"pages/index":{"component":"index"},"pages/detail":{"component":"detail"}}}}');
+                        module.exports = JSON.parse('{"package":"com.application.watch.demo","name":"MyFirstApp","versionName":"1.0.0","versionCode":1,"minPlatformVersion":1000,"icon":"/common/logo.png","deviceTypeList":["watch"],"features":[{"name":"system.router"},{"name":"system.vibrator"},{"name":"system.device"}],"config":{"logLevel":"log","designWidth":"device-width"},"router":{"entry":"pages/index","pages":{"pages/index":{"component":"index"},"pages/detail":{"component":"detail"},"pages/setPlayerName":{"component":"setPlayerName"}}}}');
                     }
                 };
                 var __webpack_module_cache__ = {};

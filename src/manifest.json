@@ -11,6 +11,12 @@
   "features": [
     {
       "name": "system.router"
+    },
+    {
+      "name": "system.vibrator"
+    },
+    {
+      "name": "system.device"
     }
   ],
   "config": {
@@ -25,6 +31,9 @@
       },
       "pages/detail": {
         "component": "detail"
+      },
+      "pages/setPlayerName": {
+        "component": "setPlayerName"
       }
     }
   }

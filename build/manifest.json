@@ -11,6 +11,12 @@
   "features": [
     {
       "name": "system.router"
+    },
+    {
+      "name": "system.vibrator"
+    },
+    {
+      "name": "system.device"
     }
   ],
   "config": {
@@ -25,13 +31,16 @@
       },
       "pages/detail": {
         "component": "detail"
+      },
+      "pages/setPlayerName": {
+        "component": "setPlayerName"
       }
     }
   },
   "minAPILevel": 1,
   "packageInfo": {
     "toolkit": "2.0.5",
-    "timeStamp": "2026-01-23T16:08:58.320Z",
+    "timeStamp": "2026-01-27T15:00:55.704Z",
     "node": "v20.18.3",
     "platform": "win32",
     "arch": "x64",

@@ -1,9 +1,27 @@
 <template>
-  <div class="page" @swipe="handleSwipe">
-    <div class="block1">
+  <div class="page" @swipe="onSwipe" >
+    <div class="center-image-container">
+      <img class="center-image" src="../../common/playground.png" />
+    </div>
+    <!-- 顶部 score -->
+    <div class="score-container top">
       <text class="score">{{ score_opp }}</text>
     </div>
-    <div class="block2">
+
+    <!-- 中间 players -->
+    <div class="players-container">
+      <div class="players-row">
+        <text class="player">{{ opp_player_left }}</text>
+        <text class="player">{{ opp_player_right }}</text>
+      </div>
+      <div class="players-row">
+        <text class="player">{{ self_player_left }}</text>
+        <text class="player">{{ self_player_right }}</text>
+      </div>
+    </div>
+
+    <!-- 底部 score -->
+    <div class="score-container bottom">
       <text class="score">{{ score_self }}</text>
     </div>
   </div>
@@ -16,15 +34,63 @@ export default {
   // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
   private: {
     score_opp: 0,
-    score_self: 0
+    score_self: 0,
+    OperationList: [],
+    opp_player1:"A",
+    opp_player2:"B",
+    self_player1:"C",
+    self_player2:"D",
+    last_score:"", //记录上一次得分方
+    opp_player_left:"",
+    opp_player_right:"",
+    self_player_left:"",
+    self_player_right:""
   },
-
-  handleSwipe(direction){
-    if(direction === 'up'){
+  onInit() {
+    this.init();
+  },
+  init(){
+    console.log("初始化页面数据");
+    this.opp_player_left = this.opp_player1;
+    this.opp_player_right = this.opp_player2;
+    this.self_player_left = this.self_player1;
+    this.self_player_right = this.self_player2;
+  },
+  onSwipe(eve){
+    if(eve.direction === 'up'){
       this.score_self += 1;
-    } else if(direction === 'down'){
+      let _score_side = 'self';
+      if(this.last_score === _score_side){
+        this.self_exchange();
+      }
+      this.last_score = _score_side;
+      console.log(this.last_score)
+
+    } else if(eve.direction === 'down'){
       this.score_opp += 1;
+      let _score_side = 'opp';
+      if(this.last_score === _score_side){
+        this.opp_exchange();
+      }
+      this.last_score = _score_side;
     }
+    
+  },
+  self_exchange(){
+    console.log(this.self_player_left);
+    let temp = this.self_player_left;
+    this.self_player_left = this.self_player_right;
+    this.self_player_right = temp;
+  },
+  opp_exchange(){
+    let temp = this.opp_player_left;
+    this.opp_player_left = this.opp_player_right;
+    this.opp_player_right = temp;
+  },
+  onLongPress(eve){
+
+    this.score_opp = 0;
+    this.score_self = 0;
   },
 
   routeDetail() {
@@ -37,20 +103,17 @@ export default {
 </script>
 
 <style>
-.demo-page {
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
 .page{
   display: flex;
   flex-direction: column;
-  width:192px;
-  height:490px;
+  width:212px;
+  height:520px;
   background-color:#000000;
-  justify-content:space-between;
+  justify-content:center;
   align-items: center;
+  background-image: url('common/background.png');
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .block1,.block2 {
@@ -68,7 +131,8 @@ export default {
   background-color: #ff3a33;
 }
 .score{
-  font-size: 100px;
+  line-height: 160px;
+  font-size: 70px;
   color: #ffffff;
 }
 
@@ -85,5 +149,54 @@ export default {
   background-color: #09ba07;
   font-size: 20px;
   color: #ffffff;
+}
+.player {
+  font-size: 35px;
+  color: #ffffff;
+  margin: 10px 15px;
+  z-index: 2;
+}
+
+.score-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100px; /* 控制 score 区域高度 */
+}
+
+.score-container.top {
+  margin-top: 20px; /* 顶部间距 */
+}
+
+.score-container.bottom {
+  margin-bottom: 20px; /* 底部间距 */
+}
+
+.score {
+  font-size: 70px;
+  color: #ffffff;
+  z-index: 2;
+}
+
+.players-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  flex: 1; /* 占据中间剩余空间 */
+}
+
+.players-row {
+  display: flex;
+  justify-content: center; /* 水平分布 */
+  width: 100%;
+  margin: 15px 0; /* 行间距 */
+  gap: 10px; /* 设置两个元素之间的间距 */
+}
+.center-image-container {
+  position: absolute; /* 绝对定位 */
+  z-index: 1; /* 确保图片在背景图上方 */
 }
 </style>
