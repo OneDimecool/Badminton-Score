@@ -1,0 +1,14 @@
+<template>
+    <div class="page">
+        <img class="circle" src="../../common/namecircle.png" />
+        <text class= "name-text">{{name-text}}</text>
+    <div class = "setServer-row" @click="SetServer">
+        <text class= "setServer">{{name-text}}</text>
+        <img class = "serve" src="../../common/serve.png"></img>
+    </div>
+    </div>
+</template>
+<script>
+</script>
+<style>
+</style>

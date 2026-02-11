@@ -1,34 +1,34 @@
 <template>
   <div class="page" @swipe="onSwipe" >
-    <div class="center-image-container">
-      <img class="center-image" src="../../common/playground.png" />
-    </div>
-    <!-- 顶部 score -->
-    <div class="score-container top">
-      <text class="score">{{ score_opp }}</text>
-    </div>
-
-    <!-- 中间 players -->
+    <text class="score" style = "position: absolute; top:30;">{{ score_opp }}</text>
+    <text style="position: absolute;left: 16px;top: 15px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+      {{nowTime}}
+    </text>
+    <img src="../../common/exchange.png" style="position: absolute; top: 120px;" @click="opp_exchange"></img>
     <div class="players-container">
       <div class="players-row">
         <text class="player">{{ opp_player_left }}</text>
         <text class="player">{{ opp_player_right }}</text>
       </div>
+      <img src="../../common/changeserve.png" @click="redetermineServePos" style="position: relative; align-items: center;"/>
       <div class="players-row">
         <text class="player">{{ self_player_left }}</text>
         <text class="player">{{ self_player_right }}</text>
       </div>
     </div>
-
-    <!-- 底部 score -->
-    <div class="score-container bottom">
-      <text class="score">{{ score_self }}</text>
+    <div class="serve" style = "top:{{lo_servePos_y}}px;left:{{lo_servePos_x}}px" >
+      <img class="serve-image" src="../../common/serve.png"></img>
     </div>
+    <img src="../../common/exchange.png" @click="self_exchange" style="position : absolute; top : 385px"></img>
+    <text class="score" style="position: absolute;top: 410;">{{ score_self }}</text>
   </div>
 </template>
 
 <script>
 import router from "@system.router"
+import storage from '../../utils/storage.js'
+import vibrator from '@system.vibrator';
+import prompt from '@system.prompt';
 
 export default {
   // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
@@ -36,33 +36,163 @@ export default {
     score_opp: 0,
     score_self: 0,
     OperationList: [],
-    opp_player1:"A",
-    opp_player2:"B",
-    self_player1:"C",
-    self_player2:"D",
     last_score:"", //记录上一次得分方
-    opp_player_left:"",
-    opp_player_right:"",
-    self_player_left:"",
-    self_player_right:""
+    opp_player_left: "A",
+    opp_player_right: "",
+    self_player_left: "",
+    self_player_right: "",
+    nowTime: "00:00",
+    servePosParams: {
+      opp_left: {x: 56 , y: 190},
+      opp_right: {x: 146 , y: 190},
+      self_left: {x: 56 , y: 280},
+      self_right: {x: 146 , y: 280},
+    },
+    lo_servePos_x: 0,
+    lo_servePos_y: 0,
+    lo_servePos: {
+      x: 0,
+      y: 0
+    }
+  },
+  resetGame() {
+    this.score_opp = 0;
+    this.score_self = 0;
+    this.last_score = "";
+    globalThis.servePosName = "opp_right";
+    this.updateServePos(globalThis.servePosName);
+  },
+  checkGameOver() {
+    const selfWin = this.score_self >= 21 && (this.score_self - this.score_opp) >= 2;
+    const oppWin = this.score_opp >= 21 && (this.score_opp - this.score_self) >= 2;
+
+    if (selfWin || oppWin) {
+      vibrator.vibrate({ mode: 'long' });
+      const msg = selfWin ? '己方获胜' : '对方获胜';
+
+      // 弹窗提示 + 按钮重置开局
+      prompt.showDialog({
+        title: '比赛结束',
+        message: msg,
+        buttons: [
+          { text: '重开', color: '#00C853' },
+        ],
+        success: (res) => {
+          // res.index: 点击按钮下标
+          if (res && res.index === 0) {
+            this.resetGame();
+          }
+        }
+      });
+      return true;
+    }
+    return false;
+  },
+
+  updateServePos(param_name)
+  {
+      if (this.servePosParams[param_name]) {
+          console.log("Updating serve position to: " + param_name);
+          this.lo_servePos_x = this.servePosParams[param_name].x;
+          this.lo_servePos_y = this.servePosParams[param_name].y;
+          console.log("Serve position updated to: (" + this.lo_servePos_x + ", " + this.lo_servePos_y + ")");
+      } else {
+          console.error("Invalid serve position parameter: " + param_name);
+      }
   },
   onInit() {
-    this.init();
+    if (!globalThis.servePosName) {
+      globalThis.servePosName = "opp_right";
+    }
+    this.updateServePos(globalThis.servePosName);
+    if (!globalThis.opp_player_left || !globalThis.opp_player_right || !globalThis.self_player_left || !globalThis.self_player_right) {
+      this.init_player(); // 等待 init_player 执行完成
+    }
+    this.updatePlayers();
+    this.timer = setInterval(() => {
+		this.updateTime();
+	}, 1000);
   },
-  init(){
-    console.log("初始化页面数据");
-    this.opp_player_left = this.opp_player1;
-    this.opp_player_right = this.opp_player2;
-    this.self_player_left = this.self_player1;
-    this.self_player_right = this.self_player2;
+  init_player() {
+    console.log("Initializing players from storage...");
+    Promise.all([
+      this.getStorage('opp_player_left'),
+      this.getStorage('opp_player_right'),
+      this.getStorage('self_player_left'),
+      this.getStorage('self_player_right')
+    ]).then((values) => {
+      globalThis.opp_player_left = values[0] || "A";
+      globalThis.opp_player_right = values[1] || "B";
+      globalThis.self_player_left = values[2] || "我";
+      globalThis.self_player_right = values[3] || "友";
+      this.updatePlayers();
+    }).catch((error) => {
+      console.error("Error retrieving storage data:", error);
+    });
   },
+  updateTime() {
+		const date = new Date();
+		let hours = date.getHours();
+		let minutes = date.getMinutes();
+    hours = hours < 10 ? '0' + hours : hours;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    this.nowTime = `${hours}:${minutes}`;
+		},
+  updatePlayers() {
+    this.opp_player_left = globalThis.opp_player_left;
+    this.opp_player_right = globalThis.opp_player_right;
+    this.self_player_left = globalThis.self_player_left;
+    this.self_player_right = globalThis.self_player_right;
+  },
+  redetermineServePos(){
+    console.log("Redetermining serve position based on current scores...");
+    if(globalThis.servePosName === 'self_right' || globalThis.servePosName === 'self_left'){
+      if(this.score_opp % 2 === 0){
+          globalThis.servePosName = 'opp_right';
+      }
+      else{
+        globalThis.servePosName = 'opp_left';
+      }
+    } else if(globalThis.servePosName === 'opp_right' || globalThis.servePosName === 'opp_left'){
+      if(this.score_self % 2 === 0){
+        globalThis.servePosName = 'self_right';
+      }
+      else{
+        globalThis.servePosName = 'self_left';
+      }
+      }
+      console.log("Redetermined serve position to: " + globalThis.servePosName);
+      this.updateServePos(globalThis.servePosName);
+  },
+  changeServePos(score_side){
+    if (score_side === 'self'){
+      if(this.score_self % 2 === 0){
+          globalThis.servePosName = 'self_right';
+      }
+      else{
+        globalThis.servePosName = 'self_left';
+      }
+    } else if(score_side === 'opp'){
+      if(this.score_opp % 2 === 0){
+        globalThis.servePosName = 'opp_right';
+      }
+      else{
+        globalThis.servePosName = 'opp_left';
+      }
+      }
+      this.updateServePos(globalThis.servePosName);
+    },
   onSwipe(eve){
+    vibrator.vibrate({
+      mode: 'short' // 仅指定振动模式
+    });
     if(eve.direction === 'up'){
       this.score_self += 1;
       let _score_side = 'self';
       if(this.last_score === _score_side){
         this.self_exchange();
       }
+      this.changeServePos(_score_side);
       this.last_score = _score_side;
       console.log(this.last_score)
 
@@ -72,15 +202,17 @@ export default {
       if(this.last_score === _score_side){
         this.opp_exchange();
       }
+      this.changeServePos(_score_side);
       this.last_score = _score_side;
     }
-    
+    this.checkGameOver()
   },
   self_exchange(){
     console.log(this.self_player_left);
     let temp = this.self_player_left;
     this.self_player_left = this.self_player_right;
     this.self_player_right = temp;
+    console.log(globalThis.self_player_left);
   },
   opp_exchange(){
     let temp = this.opp_player_left;
@@ -98,6 +230,21 @@ export default {
     router.push({
       uri: "/pages/detail"
     })
+  },
+
+  getStorage(key){
+    return new Promise((resolve, reject) => {
+      storage.get({
+        key: key,
+        complete: (data) => {
+          if (data && data.value) {
+            resolve(data.value);
+          } else {
+            resolve(null); // 如果没有值，返回null
+          }
+        },
+      });
+    });
   }
 }
 </script>
@@ -114,47 +261,28 @@ export default {
   background-image: url('common/background.png');
   background-position: center;
   background-repeat: no-repeat;
+  position:relative;
+}
+.serve{
+  position: absolute;
+  z-index: 3;
 }
 
-.block1,.block2 {
-  width: 192px;
-  height: 200px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.block1{
-  background-color: #3ac7ff;
-}
-.block2 {
-  background-color: #ff3a33;
-}
 .score{
-  line-height: 160px;
   font-size: 70px;
   color: #ffffff;
+  font-weight:bold;
 }
 
-.title {
-  font-size: 20px;
-  text-align: center;
-}
 
-.btn {
-  width: 200px;
-  height: 40px;
-  margin-top: 20px;
-  border-radius: 5px;
-  background-color: #09ba07;
-  font-size: 20px;
-  color: #ffffff;
-}
 .player {
   font-size: 35px;
   color: #ffffff;
-  margin: 10px 15px;
+  margin: 10px 12px;
   z-index: 2;
+  text-align: center; /* 确保文字居中显示 */
+
+  font-weight:bold;
 }
 
 .score-container {
@@ -166,17 +294,17 @@ export default {
 }
 
 .score-container.top {
-  margin-top: 20px; /* 顶部间距 */
+  margin-top: 0px; /* 顶部间距 */
 }
 
 .score-container.bottom {
-  margin-bottom: 20px; /* 底部间距 */
+  margin-bottom: -10px; /* 底部间距 */
 }
 
 .score {
   font-size: 70px;
   color: #ffffff;
-  z-index: 2;
+  z-index: 1;
 }
 
 .players-container {
@@ -184,19 +312,24 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 100%;
+  width: 120px;
+  height: 195px;
   flex: 1; /* 占据中间剩余空间 */
+  position: absolute;
+  background-image: url('common/playground.png');
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .players-row {
   display: flex;
   justify-content: center; /* 水平分布 */
   width: 100%;
-  margin: 15px 0; /* 行间距 */
+  margin: 4px;
   gap: 10px; /* 设置两个元素之间的间距 */
 }
 .center-image-container {
-  position: absolute; /* 绝对定位 */
+  position: relative; /* 绝对定位 */
   z-index: 1; /* 确保图片在背景图上方 */
 }
 </style>

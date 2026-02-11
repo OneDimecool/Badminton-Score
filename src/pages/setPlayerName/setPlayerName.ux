@@ -22,7 +22,7 @@
 export default {
   private: {
     textValue: "",
-    hide: false,
+    hide: true,
     keyboardtype: "QWERTY", //QWERTY, T9
     vibratemode: "short",
     screentype: "pill-shaped", //pill-shaped, rect, circle

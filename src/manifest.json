@@ -17,6 +17,12 @@
     },
     {
       "name": "system.device"
+    },
+    {
+      "name": "system.file"
+    },
+    {
+      "name": "system.prompt"
     }
   ],
   "config": {
