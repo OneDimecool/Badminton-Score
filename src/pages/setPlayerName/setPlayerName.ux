@@ -1,68 +1,103 @@
 <import name="input-method" src="../../components/InputMethod/InputMethod.ux"></import>
 <template>
-  <div class="page" style="flex-direction: column;">
-    <text class="text" @click="changeState">
+  <div class="page" style="display:flex;flex-direction:column; justify-content:flex-start;align-items:center">
+    <img src="../../common/namecircle.png" style="margin: 20% auto;"/>
+    <text class="text">
       {{textValue}}
     </text>
+    <img src="../../common/complete.png" style="margin: 20% auto;"@click="Complete"/>
     <input-method
       hide="{{hide}}"
-      keyboardtype="{{keyboardtype}}"
-      maxlength="5"
-      vibratemode="{{vibratemode}}"
-      screentype="{{screentype}}"
-      @visibility-change="onVisibilityChange"
-      @key-down="onKeyDown"
-      @delete="onDelete"
-      @complete="onComplete"
-    ></input-method>
+      keyboardtype="QWERTY"
+      vibratemode="short"
+      screentype="pill-shaped"
+      @complete="onInput"
+      @delete="onDelete"/>
   </div>
+
 </template>
 
 <script>
+import router from "@system.router";
+import storage from '../../utils/storage.js'
 export default {
+  props: {
+    player_pos: {
+      default: "",
+    }
+  },
   private: {
     textValue: "",
-    hide: true,
-    keyboardtype: "QWERTY", //QWERTY, T9
-    vibratemode: "short",
-    screentype: "pill-shaped", //pill-shaped, rect, circle
+    hide: false,
   },
-  onVisibilityChange(evt) {
-    console.log("显示状态变更:"+JSON.stringify(evt));
+  Complete(){
+    if (this.player_pos === "opp_player_left") {
+      globalThis.opp_player_left = this.textValue;
+      console.log("setting player name to saved file")
+      storage.set({
+        key: 'opp_player_left',
+        value: this.textValue
+    })
+    } else if (this.player_pos === "opp_player_right") {
+      globalThis.opp_player_right = this.textValue;
+      storage.set({
+        key: 'opp_player_right',
+        value: this.textValue
+      })
+    } else if (this.player_pos === "self_player_left") {
+      globalThis.self_player_left = this.textValue;
+      storage.set({
+        key: 'self_player_left',
+        value: this.textValue
+      })
+    } else if (this.player_pos === "self_player_right") {
+      globalThis.self_player_right = this.textValue;
+      storage.set({
+        key: 'self_player_right',
+        value: this.textValue
+      })
+    }
+    router.back();
   },
-  onKeyDown(evt) {
-    // this.textValue += evt.detail.content;
-    console.log("按下按键:"+JSON.stringify(evt));
+  onInit(){
+    if (this.player_pos === "opp_player_left") {
+      this.textValue = globalThis.opp_player_left;
+    } else if (this.player_pos === "opp_player_right") {
+      this.textValue = globalThis.opp_player_right;
+    } else if (this.player_pos === "self_player_left") {
+      this.textValue = globalThis.self_player_left;
+    } else if (this.player_pos === "self_player_right") {
+      this.textValue = globalThis.self_player_right;
+    }
+    console.log("textvalue= "+this.textValue);
   },
   onDelete() {
-    this.textValue = this.textValue.slice(0, -1);
-    console.log("删除字符");
+    this.textValue = "";
   },
-  changeState() {
-    this.hide = !this.hide;
+  onInput(evt) {
+    this.textValue = evt.detail.content.slice(0, 1);
   },
-  onComplete(evt) {
-    this.textValue += evt.detail.content;
-    console.log("返回字符:"+JSON.stringify(evt));
-  },
+
 };
 
 </script>
 
 <style>
 .page{
-  width:192px;
-  height:480px;
+  width:212px;
+  height:520px;
+  background-color: black;
 }
 
 .text{
   position:absolute;
-  left:0;
-  top:60px;
-  width:100%;
+  left:55px;
+  top:30px;
+  width:50%;
   height:80px;
   text-align:center;
   color:white;
-  background-color: rgb(81, 232, 255);
+  font-weight:bold;
+  font-size:50px;
 }
 </style>

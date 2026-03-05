@@ -1,0 +1,81 @@
+<template>  
+    <div class="page">
+        <text class="title_opp">对手</text>
+        <picker 
+          class="picker_opp" 
+          type="text" 
+          range="{{pickerList}}" 
+          selected= {{opp_init}}
+          onchange="onOppPickerChange">
+        </picker>
+        <text class="title_self">己方</text>
+        <picker 
+          class="picker_self" 
+          type="text" 
+          range="{{pickerList}}" 
+          selected= {{self_init}}
+          onchange="onSelfPickerChange">
+        </picker>
+        <img src="../../common/confirm.png" @click="onConfirm" style = "margin: 8px 30px" ></img>
+    </div>
+</template>
+
+<script>
+    import router from "@system.router";
+    export default {
+        props: {
+            self_init: {
+                default: 0
+            },
+            opp_init: {
+                default: 0
+            }
+        },
+        private: {
+            pickerList: Array.from({ length: 31 }, (_, i) => `${i}`)
+        },
+        onConfirm(){
+            router.back();
+        },
+        onOppPickerChange(e) {
+            globalThis.gameStatus.score_opp = parseInt(e.newValue, 10);
+        },
+        onSelfPickerChange(e){
+            globalThis.gameStatus.score_self = parseInt(e.newValue, 10);;
+        }
+
+    }
+
+</script>
+
+<style>
+    .picker_opp {
+        font-size: 25px;
+        color: #fff;
+        selected-font-size: 35px;
+        selected-color: #5CBFE0;
+        selected-background-color: #ccc;
+  }
+  .picker_self {
+        font-size: 25px;
+        color: #fff;
+        selected-font-size: 35px;
+        selected-color: #FE8069;
+        selected-background-color: #ccc;
+  }
+    .page{
+        flex-direction: column;
+        padding: 30px;
+        background-color: #000000;
+    }
+    .title_opp {
+        font-size: 30px;
+        color: #5CBFE0;
+        font-weight:bold;
+    }
+    .title_self {
+        font-size: 30px;
+        color: #FE8069;
+        font-weight:bold;
+    }
+</style>

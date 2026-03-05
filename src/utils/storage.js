@@ -1,6 +1,6 @@
 import file from '@system.file';
 
-const fileSavedPath = 'internal://files/badminton/storage-api/savedFile';
+const fileSavedPath = 'internal://files/badminton/storage-api/savedFile.json';
 
 if (typeof global.__storage_cache__ === 'undefined') {
     global.__storage_cache__ = null;
@@ -35,7 +35,7 @@ function loadIfNeeded(callback) {
     if (global.__storage_loading__) return;
 
     global.__storage_loading__ = true;
-
+    console.log("Loading storage from file...");
     file.readText({
         uri: fileSavedPath,
         success: function(data) {
@@ -57,7 +57,9 @@ function loadIfNeeded(callback) {
 }
 
 function saveToFile() {
+    console.log("Saving storage to file:");
     const toWrite = (global.__storage_cache__ && typeof global.__storage_cache__ === 'object') ? global.__storage_cache__ : {};
+
     file.writeText({
         uri: fileSavedPath,
         text: JSON.stringify(toWrite)
@@ -77,14 +79,20 @@ function get(param = {}) {
 }
 
 function set(param = {}) {
+
     loadIfNeeded(data => {
         const safeData = data || {};
-        if (safeData[param.key] !== param.value) {
+        const hasKey = Object.prototype.hasOwnProperty.call(safeData, param.key);
+        if (!hasKey||safeData[param.key] !== param.value) {
+            console.log("TRYING Storage set: key=" + param.key + ", value=" + param.value);
             safeData[param.key] = param.value;
             global.__storage_cache__ = safeData;
             saveToFile();
         }
-        if (param.success) param.success();
+        if (param.success) {
+            param.success();
+            console.log("Storage set success: key=" + param.key + ", value=" + param.value);
+        }
         if (param.complete) param.complete();
     });
 }
