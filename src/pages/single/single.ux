@@ -4,28 +4,23 @@
     <text style="position: absolute;left: 16px;top: 15px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
       {{nowTime}}
     </text>
-    <div @click="opp_exchange" style="position: absolute; top: 120px;padding:5px 50px 5px;" >
-      <img src="../../common/exchange.png"></img>
-    </div>
     <div class="players-container">
       <div class="players-row">
-        <text class="player" @click="setName('opp_player_left')">{{ opp_player_left }}</text>
-        <text class="player" @click="setName('opp_player_right')">{{ opp_player_right }}</text>
+        <text class="player" @click="setName('s_opp_player_left',opp_player_left)">{{ opp_player_left }}</text>
+        <text class="player" @click="setName('s_opp_player_right',opp_player_right)">{{ opp_player_right }}</text>
       </div>
       <div style="position: absolute; align-items: center; padding:5px 50px 5px;"@click="exchangeServePos">
         <img src="../../common/changeserve.png"  />
       </div>
       <div class="players-row">
-        <text class="player" @click="setName('self_player_left')">{{ self_player_left }}</text>
-        <text class="player" @click="setName('self_player_right')">{{ self_player_right }}</text>
+        <text class="player" @click="setName('s_self_player_left',self_player_left)">{{ self_player_left }}</text>
+        <text class="player" @click="setName('s_self_player_right',self_player_right)">{{ self_player_right }}</text>
       </div>
     </div>
     <div class="serve" style = "top:{{lo_servePos_y}}px;left:{{lo_servePos_x}}px" >
       <img class="serve-image" src="../../common/serve.png"></img>
     </div>
-    <div  style="position: absolute; top: 375px; padding:5px 50px 5px;" >
-      <img src="../../common/exchange.png" @click="self_exchange"></img>
-    </div>
+
       <text class="score" style="position: absolute;top: 410;" @click="onClickScore">{{ score_self }}</text>
   </div>
 </template>
@@ -44,7 +39,7 @@ export default {
     score_opp: 0,
     score_self: 0,
     OperationList: [],
-    last_score:"", //记录上一次得分方
+    last_score:"opp", //记录上一次得分方
     opp_player_left: "",
     opp_player_right: "",
     self_player_left: "",
@@ -64,8 +59,8 @@ export default {
     },
     initialized: false,
   },
-  setName(i_player_pos){
-    console.log("click recognized");
+  setName(i_player_pos, i_player_name){
+    if(i_player_name === "") return;
     this.saveStatus();
     router.push({
       uri: "/pages/setPlayerName",
@@ -77,9 +72,8 @@ export default {
   resetGame() {
     this.score_opp = 0;
     this.score_self = 0;
-    this.last_score = "";
+    this.last_score = "opp";
     globalThis.servePosName = "opp_left";
-    globalThis.last_score = "";
     this.updateServePos(globalThis.servePosName);
   },
   checkGameOver() {
@@ -112,10 +106,28 @@ export default {
   updateServePos(param_name)
   {
       if (this.servePosParams[param_name]) {
-          console.log("Updating serve position to: " + param_name);
           this.lo_servePos_x = this.servePosParams[param_name].x;
           this.lo_servePos_y = this.servePosParams[param_name].y;
-          console.log("Serve position updated to: (" + this.lo_servePos_x + ", " + this.lo_servePos_y + ")");
+          if(param_name === 'self_left')
+          {
+            this.self_player_left = this.self_player_left === "" ? this.self_player_right : this.self_player_left;
+            this.self_player_right = "";
+          }
+          if(param_name === 'self_right')
+          {
+            this.self_player_right = this.self_player_right === "" ? this.self_player_left : this.self_player_right;
+            this.self_player_left = "";
+          }
+          if(param_name === 'opp_left')
+          {
+            this.opp_player_left = this.opp_player_left === "" ? this.opp_player_right : this.opp_player_left;
+            this.opp_player_right = "";
+          }
+          if(param_name === 'opp_right')
+          {
+            this.opp_player_right = this.opp_player_right === "" ? this.opp_player_left : this.opp_player_right;
+            this.opp_player_left = "";
+          }
       } else {
           console.error("Invalid serve position parameter: " + param_name);
       }
@@ -126,7 +138,7 @@ export default {
     }
     this.updateServePos(globalThis.servePosName);
     if (!globalThis.opp_player_left || !globalThis.opp_player_right || !globalThis.self_player_left || !globalThis.self_player_right) {
-      this.init_player(); // 等待 init_player 执行完成
+      this.init_player(); 
     }
     this.updatePlayers();
     this.timer = setInterval(() => {
@@ -135,15 +147,15 @@ export default {
   },
   init_player() {
     Promise.all([
-      this.getStorage('opp_player_left'),
-      this.getStorage('opp_player_right'),
-      this.getStorage('self_player_left'),
-      this.getStorage('self_player_right')
+      this.getStorage('s_opp_player_left'),
+      this.getStorage('s_opp_player_right'),
+      this.getStorage('s_self_player_left'),
+      this.getStorage('s_self_player_right')
     ]).then((values) => {
-      globalThis.opp_player_left = values[0] || "拉";
-      globalThis.opp_player_right = values[1] || "夯";
-      globalThis.self_player_left = values[2] || "我";
-      globalThis.self_player_right = values[3] || "友";
+      globalThis.s_opp_player_left = values[0] || "拉";
+      globalThis.s_opp_player_right = values[1] || "夯";
+      globalThis.s_self_player_left = values[2] || "我";
+      globalThis.s_self_player_right = values[3] || "友";
       this.updatePlayers();
     }).catch((error) => {
     });
@@ -157,10 +169,10 @@ export default {
     this.nowTime = `${hours}:${minutes}`;
 		},
   updatePlayers() {
-    this.opp_player_left = globalThis.opp_player_left;
-    this.opp_player_right = globalThis.opp_player_right;
-    this.self_player_left = globalThis.self_player_left;
-    this.self_player_right = globalThis.self_player_right;
+    this.opp_player_left = globalThis.s_opp_player_left;
+    this.opp_player_right = globalThis.s_opp_player_right;
+    this.self_player_left = globalThis.s_self_player_left;
+    this.self_player_right = globalThis.s_self_player_right;
   },
   exchangeServePos(){
     if(globalThis.servePosName === 'self_right' || globalThis.servePosName === 'self_left'){
@@ -189,7 +201,6 @@ export default {
       this.updateServePos(globalThis.servePosName);
   },
   redetermineServePos(){
-    console.log("Redetermining serve position based on current scores and last score" + globalThis.servePosName);
     if(globalThis.servePosName === 'self_right' || globalThis.servePosName === 'self_left'){
       if(this.score_self % 2 === 0){
           globalThis.servePosName = 'self_right';
@@ -259,17 +270,7 @@ export default {
     } 
     this.checkGameOver()
   },
-  self_exchange(){
-    let temp = this.self_player_left;
-    this.self_player_left = this.self_player_right;
-    this.self_player_right = temp;
 
-  },
-  opp_exchange(){
-    let temp = this.opp_player_left;
-    this.opp_player_left = this.opp_player_right;
-    this.opp_player_right = temp;
-  },
   onLongPress(eve){
     prompt.showDialog({
         title: '重置比赛',
@@ -345,30 +346,28 @@ export default {
       this.timer = null;
     }
   },
-  
   saveStatus(){
     globalThis.gameStatus = {
       score_opp: this.score_opp,
       score_self: this.score_self,
       last_score: this.last_score,
     };
-    globalThis.opp_player_left = this.opp_player_left;
-    globalThis.opp_player_right = this.opp_player_right;
-    globalThis.self_player_left = this.self_player_left;
-    globalThis.self_player_right = this.self_player_right;
+    globalThis.s_opp_player_left = this.opp_player_left;
+    globalThis.s_opp_player_right = this.opp_player_right;
+    globalThis.s_self_player_left = this.self_player_left;
+    globalThis.s_self_player_right = this.self_player_right;
   },
   restoreStatus(){
     if(globalThis.gameStatus){
       this.score_opp = globalThis.gameStatus.score_opp;
       this.score_self = globalThis.gameStatus.score_self;
       this.last_score = globalThis.gameStatus.last_score;
-      console.log("Current score_self: " + this.score_self + ", score_opp: " + this.score_opp + ", last_score: " + this.last_score);
       this.redetermineServePos();
       this.updateServePos(globalThis.servePosName);
-      this.opp_player_left = globalThis.opp_player_left;
-      this.opp_player_right = globalThis.opp_player_right;
-      this.self_player_left = globalThis.self_player_left;
-      this.self_player_right = globalThis.self_player_right;
+      this.opp_player_left = globalThis.s_opp_player_left;
+      this.opp_player_right = globalThis.s_opp_player_right;
+      this.self_player_left = globalThis.s_self_player_left;
+      this.self_player_right = globalThis.s_self_player_right;
     }
     file.readText({
                 uri: 'internal://files/badminton/storage-api/savedFile',
@@ -380,10 +379,10 @@ export default {
                 }
             });
     Promise.all([
-      this.getStorage('opp_player_left'),
-      this.getStorage('opp_player_right'),
-      this.getStorage('self_player_left'),
-      this.getStorage('self_player_right')
+      this.getStorage('s_opp_player_left'),
+      this.getStorage('s_opp_player_right'),
+      this.getStorage('s_self_player_left'),
+      this.getStorage('s_self_player_right')
     ]).then((values) => {
       console.log("Retrieved player names from storage: ", values);
     }).catch((error) => {

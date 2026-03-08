@@ -1,5 +1,6 @@
 <script>
 import file from '@system.file'
+import brightness from '@system.brightness'
 export default {
 
   onDestroy() {
@@ -16,6 +17,8 @@ export default {
                 });
             }
         });
+
+
   }
 }
 </script>

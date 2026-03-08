@@ -19,6 +19,9 @@
       "name": "system.device"
     },
     {
+      "name": "system.brightness"
+    },
+    {
       "name": "system.file"
     },
     {
